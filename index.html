@@ -260,37 +260,32 @@
 
       function Main() {
         const ref = React.useRef();
-        const initedRef = React.useRef(false);
-        const [activeTab, setActiveTab] = React.useState("");
-        const [hasRightScroll, setHasRightScroll] = React.useState(false);
-
-        React.useEffect(() => {
-          if (!activeTab && !initedRef.current) {
-            initedRef.current = true;
-            setActiveTab(
-              new URLSearchParams(location.search).get("tab") || "all"
-            );
-          }
+        const [activeTab, setActiveTab] = React.useState(() => {
+          return new URLSearchParams(location.search).get("tab") || "all";
         });
+        const [hasRightScroll, setHasRightScroll] = React.useState(false);
+        const [sizes, setSizes] = React.useState([]);
 
         const onSelectInput = (event) => {
           setActiveTab(event.target.value);
         };
 
-        let sizes = [];
         const onSize = (size) => {
-          sizes = [...sizes, size];
+          setSizes(prevSizes => [...prevSizes, size]);
         };
 
         React.useEffect(() => {
-          const sumWidth = sizes.reduce((acc, item) => acc + item.width, 0);
-          const sumHeight = sizes.reduce((acc, item) => acc + item.height, 0);
+          setSizes([]);
+        }, [activeTab]);
 
+        React.useEffect(() => {
+          if (sizes.length === 0 || !ref.current) return;
+
+          const sumWidth = sizes.reduce((acc, item) => acc + item.width, 0);
           const newHasRightScroll = sumWidth > ref.current.offsetWidth;
-          if (newHasRightScroll !== hasRightScroll) {
-            setHasRightScroll(newHasRightScroll);
-          }
-        });
+          
+          setHasRightScroll(newHasRightScroll);
+        }, [sizes]);
 
         const onArrowCLick = () => {
           const scroller = ref.current.querySelector(
