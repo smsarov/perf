@@ -271,7 +271,7 @@
         };
 
         const onSize = (size) => {
-          setSizes((prevSizes) => [...prevSizes, size]);
+          setSizes(prevSizes => [...prevSizes, size]);
         };
 
         React.useEffect(() => {
@@ -283,7 +283,7 @@
 
           const sumWidth = sizes.reduce((acc, item) => acc + item.width, 0);
           const newHasRightScroll = sumWidth > ref.current.offsetWidth;
-
+          
           setHasRightScroll(newHasRightScroll);
         }, [sizes]);
 
@@ -462,13 +462,15 @@
         );
       }
 
-      const root = ReactDOM.createRoot(document.getElementById("app"));
-      root.render(
-        <>
-          <Header />
-          <Main />
-        </>
-      );
+      setTimeout(() => {
+        const root = ReactDOM.createRoot(document.getElementById("app"));
+        root.render(
+          <>
+            <Header />
+            <Main />
+          </>
+        );
+      }, 100);
     </script>
   </body>
 </html>
