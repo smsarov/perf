@@ -105,7 +105,7 @@
           if (onSize) {
             onSize({ width, height });
           }
-        }, []); // Only run once when component mounts
+        });
 
         return (
           <li ref={ref} className={"event" + (props.slim ? " event_slim" : "")}>
