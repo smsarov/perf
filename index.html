@@ -168,13 +168,12 @@
           ],
         },
       };
-      for (let i = 0; i < 6; ++i) {
-        TABS.all.items = [...TABS.all.items, ...TABS.all.items];
-      }
+      const originalItems = [...TABS.all.items];
+      TABS.all.items = Array(64)
+        .fill()
+        .flatMap(() => originalItems);
+
       const TABS_KEYS = Object.keys(TABS);
-
-
-
 
       function Header() {
         let [expanded, setExpanded] = React.useState(false);
