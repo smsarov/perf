@@ -11,6 +11,9 @@
       type="font/woff2"
       crossorigin="anonymous"
     />
+    <link rel="preload" href="assets/logo.svg" as="image" type="image/svg+xml" />
+    <link rel="preload" href="vendors/react-with-dom.js" as="script" />
+    <link rel="preload" href="vendors/babel.min.js" as="script" />
     <script src="vendors/react-with-dom.js"></script>
     <link rel="stylesheet" type="text/css" href="reset.css" />
     <link rel="stylesheet" type="text/css" href="styles.css" />
@@ -37,8 +40,8 @@
       <div class="footer__copyright">© 1997–2023 ООО «Яндекс»</div>
     </footer>
 
-    <script src="vendors/babel.min.js"></script>
-    <script type="text/babel">
+    <script src="vendors/babel.min.js" defer></script>
+    <script type="text/babel" defer>
       const TABS = {
         all: {
           title: "Все",
@@ -179,13 +182,13 @@
         let [expanded, setExpanded] = React.useState(false);
         let [toggled, setToggled] = React.useState(false);
 
-        const onClick = () => {
+        const onClick = React.useCallback(() => {
           if (!toggled) {
             setToggled(true);
           }
 
           setExpanded(!expanded);
-        };
+        }, [expanded, toggled]);
 
         return (
           <header className="header">
@@ -230,7 +233,7 @@
         );
       }
 
-      function Event(props) {
+      const Event = React.memo(function Event(props) {
         return (
           <li className={"event" + (props.slim ? " event_slim" : "")}>
             <button className="event__button">
@@ -246,7 +249,7 @@
             </button>
           </li>
         );
-      }
+      });
 
       function Main() {
         const panelRef = React.useRef();
@@ -255,9 +258,9 @@
         );
         const [hasRightScroll, setHasRightScroll] = React.useState(false);
 
-        const onSelectInput = (event) => {
+        const onSelectInput = React.useCallback((event) => {
           setActiveTab(event.target.value);
-        };
+        }, []);
 
         const checkOverflow = React.useCallback(() => {
           const panel = panelRef.current.querySelector(
@@ -272,12 +275,20 @@
           checkOverflow();
         }, [activeTab, checkOverflow]);
 
-        React.useEffect(() => {
-          window.addEventListener("resize", checkOverflow);
-          return () => window.removeEventListener("resize", checkOverflow);
-        }, [checkOverflow]);
+        const debouncedCheckOverflow = React.useCallback(() => {
+          let timeoutId;
+          return () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(checkOverflow, 100);
+          };
+        }, [checkOverflow])();
 
-        const onArrowCLick = () => {
+        React.useEffect(() => {
+          window.addEventListener("resize", debouncedCheckOverflow);
+          return () => window.removeEventListener("resize", debouncedCheckOverflow);
+        }, [debouncedCheckOverflow]);
+
+        const onArrowCLick = React.useCallback(() => {
           const scroller = panelRef.current.querySelector(
             ".section__panel:not(.section__panel_hidden)"
           );
@@ -287,7 +298,7 @@
               behavior: "smooth",
             });
           }
-        };
+        }, []);
 
         return (
           <main className="main">
@@ -454,10 +465,10 @@
 
       const root = ReactDOM.createRoot(document.getElementById("app"));
       root.render(
-        <>
+        <React.StrictMode>
           <Header />
           <Main />
-        </>
+        </React.StrictMode>
       );
     </script>
   </body>
