@@ -95,20 +95,8 @@
       }
 
       function Event(props) {
-        const ref = React.useRef();
-
-        const { onSize } = props;
-
-        React.useEffect(() => {
-          const width = ref.current.offsetWidth;
-          const height = ref.current.offsetHeight;
-          if (onSize) {
-            onSize({ width, height });
-          }
-        });
-
         return (
-          <li ref={ref} className={"event" + (props.slim ? " event_slim" : "")}>
+          <li className={"event" + (props.slim ? " event_slim" : "")}>
             <button className="event__button">
               <span
                 className={`event__icon event__icon_${props.icon}`}
@@ -259,38 +247,34 @@
       const TABS_KEYS = Object.keys(TABS);
 
       function Main() {
-        const ref = React.useRef();
+        const panelRef = React.useRef();
         const initedRef = React.useRef(false);
-        const [activeTab, setActiveTab] = React.useState("");
+        const [activeTab, setActiveTab] = React.useState(
+          new URLSearchParams(location.search).get("tab") || "all"
+        );
         const [hasRightScroll, setHasRightScroll] = React.useState(false);
-
-        React.useEffect(() => {
-          if (!activeTab && !initedRef.current) {
-            initedRef.current = true;
-            setActiveTab(
-              new URLSearchParams(location.search).get("tab") || "all"
-            );
-          }
-        });
 
         const onSelectInput = (event) => {
           setActiveTab(event.target.value);
         };
 
-        let sizes = [];
-        const onSize = (size) => {
-          sizes = [...sizes, size];
-        };
+        const checkOverflow = React.useCallback(() => {
+          const panel = panelRef.current.querySelector(
+            ".section__panel:not(.section__panel_hidden)"
+          );
+          if (!panel) return;
+          const { scrollWidth, clientWidth } = panel;
+          setHasRightScroll(scrollWidth > clientWidth);
+        }, []);
+
+        React.useLayoutEffect(() => {
+          checkOverflow();
+        }, [activeTab, checkOverflow]);
 
         React.useEffect(() => {
-          const sumWidth = sizes.reduce((acc, item) => acc + item.width, 0);
-          const sumHeight = sizes.reduce((acc, item) => acc + item.height, 0);
-
-          const newHasRightScroll = sumWidth > ref.current.offsetWidth;
-          if (newHasRightScroll !== hasRightScroll) {
-            setHasRightScroll(newHasRightScroll);
-          }
-        });
+          window.addEventListener("resize", checkOverflow);
+          return () => window.removeEventListener("resize", checkOverflow);
+        }, [checkOverflow]);
 
         const onArrowCLick = () => {
           const scroller = ref.current.querySelector(
@@ -438,7 +422,7 @@
                 </ul>
               </div>
 
-              <div className="section__panel-wrapper" ref={ref}>
+              <div className="section__panel-wrapper" ref={panelRef}>
                 {TABS_KEYS.map((key) => (
                   <div
                     key={key}
@@ -447,13 +431,13 @@
                       "section__panel" +
                       (key === activeTab ? "" : " section__panel_hidden")
                     }
-                    aria-hidden={key === activeTab ? "false" : "true"}
+                    aria-hidden={key === activeTab}
                     id={`panel_${key}`}
                     aria-labelledby={`tab_${key}`}
                   >
                     <ul className="section__panel-list">
                       {TABS[key].items.map((item, index) => (
-                        <Event key={index} {...item} onSize={onSize} />
+                        <Event key={index} {...item} />
                       ))}
                     </ul>
                   </div>
